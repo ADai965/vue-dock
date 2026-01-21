@@ -1,19 +1,35 @@
-<script setup>
-import { markRaw } from 'vue'
+<script setup lang="ts">
+import { markRaw, onMounted, onUnmounted } from 'vue'
+import type { Component } from 'vue'
 import DockLayout from './components/rc-dock/DockLayout.vue'
 import FileExplorer from './components/FileExplorer.vue'
 import HomeView from './views/HomeView.vue'
 import AboutView from './views/AboutView.vue'
 import SettingsView from './views/SettingsView.vue'
+import type { LayoutData } from './components/rc-dock/types'
 
-const componentRegistry = {
+// Disable default context menu globally
+// 全局禁用默认右键菜单
+const preventContextMenu = (e: MouseEvent) => {
+  e.preventDefault()
+}
+
+onMounted(() => {
+  document.addEventListener('contextmenu', preventContextMenu)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('contextmenu', preventContextMenu)
+})
+
+const componentRegistry: Record<string, Component> = {
   'FileExplorer': markRaw(FileExplorer),
   'HomeView.vue': markRaw(HomeView),
   'AboutView.vue': markRaw(AboutView),
   'SettingsView.vue': markRaw(SettingsView)
 }
 
-const defaultLayout = {
+const defaultLayout: LayoutData = {
   dockbox: {
     id: 'root-box',
     mode: 'horizontal',

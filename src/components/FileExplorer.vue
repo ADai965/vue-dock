@@ -1,11 +1,12 @@
-<script setup>
+<script setup lang="ts">
 import { markRaw, inject } from 'vue'
 import { DockContext } from './rc-dock/DockData'
 import HomeView from '../views/HomeView.vue'
 import AboutView from '../views/AboutView.vue'
 import SettingsView from '../views/SettingsView.vue'
+import type { DockBox, DockPanel } from './rc-dock/types'
 
-const { onDockMove, layout } = inject(DockContext)
+const { onDockMove, layout } = inject(DockContext) as any
 
 const files = [
   { name: 'HomeView.vue', component: markRaw(HomeView) },
@@ -13,10 +14,10 @@ const files = [
   { name: 'SettingsView.vue', component: markRaw(SettingsView) }
 ]
 
-const findFirstPanel = (box) => {
+const findFirstPanel = (box: DockBox | DockPanel): DockPanel | null => {
     if (!box) return null
-    if (box.tabs) return box
-    if (box.children) {
+    if ('tabs' in box) return box as DockPanel
+    if ('children' in box && box.children) {
         for (const child of box.children) {
             const found = findFirstPanel(child)
             if (found) return found
@@ -25,7 +26,7 @@ const findFirstPanel = (box) => {
     return null
 }
 
-const onDoubleClick = (file) => {
+const onDoubleClick = (file: { name: string, component: any }) => {
   const tab = {
      // Append random suffix to allow multiple instances of the same component
      id: file.name.toLowerCase().replace(/[^a-z0-9-]/g, '-') + '-' + Math.random().toString(36).substr(2, 9),
@@ -39,7 +40,7 @@ const onDoubleClick = (file) => {
   let targetId = 'editor-box'
   
   if (layout && layout.value && layout.value.dockbox) {
-      const editorBox = layout.value.dockbox.children.find(c => c.id === 'editor-box')
+      const editorBox = layout.value.dockbox.children.find((c: any) => c.id === 'editor-box')
       if (editorBox) {
           const firstPanel = findFirstPanel(editorBox)
           if (firstPanel) {

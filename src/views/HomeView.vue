@@ -1,10 +1,22 @@
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useTabState } from '../components/rc-dock/useTabState'
 
+interface Note {
+  id: number
+  text: string
+  done: boolean
+}
+
+interface HomeState {
+  counter: number
+  username: string
+  notes: Note[]
+}
+
 // Persistent state for HomeView
 // HomeView 的持久化状态
-const state = useTabState({
+const state = useTabState<HomeState>({
   counter: 0,
   username: 'Guest',
   notes: []
@@ -23,11 +35,11 @@ const addNote = () => {
   }
 }
 
-const toggleNote = (note) => {
+const toggleNote = (note: Note) => {
   note.done = !note.done
 }
 
-const removeNote = (index) => {
+const removeNote = (index: number) => {
   state.notes.splice(index, 1)
 }
 </script>

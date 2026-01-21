@@ -1,7 +1,13 @@
-<script setup>
+<script setup lang="ts">
 import { useTabState } from '../components/rc-dock/useTabState'
 
-const aboutState = useTabState({
+interface AboutState {
+  showDetails: boolean
+  rating: number
+  feedback: string
+}
+
+const aboutState = useTabState<AboutState>({
   showDetails: true,
   rating: 5,
   feedback: ''

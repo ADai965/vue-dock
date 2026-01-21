@@ -1,49 +1,52 @@
-<script setup>
-import { inject } from 'vue'
-import { DockContext } from './DockData'
+<script setup lang="ts">
+import { inject } from "vue";
+import { DockContext } from "./DockData";
+import type { DockPanel, DockTab } from "./types";
 
-const props = defineProps({
-  panelData: {
-    type: Object,
-    required: true
-  }
-})
+const props = defineProps<{
+  panelData: DockPanel;
+}>();
 
-const { onDockMove, layoutVersion } = inject(DockContext)
+const { onDockMove } = inject(DockContext) as any;
 
 /**
  * Handle tab drag start
  * 处理标签页拖拽开始
- * 
- * @param {DragEvent} e - Drag event (拖拽事件)
- * @param {Object} tab - The tab object being dragged (被拖拽的标签页对象)
+ *
+ * @param e - Drag event (拖拽事件)
+ * @param tab - The tab object being dragged (被拖拽的标签页对象)
  */
-const onDragStart = (e, tab) => {
-  e.dataTransfer.effectAllowed = 'move'
-  // Transfer tab and panel IDs
-  // 传输标签页 ID 和面板 ID
-  e.dataTransfer.setData('dock/tab', JSON.stringify({
-    tabId: tab.id,
-    panelId: props.panelData.id
-  }))
-}
+const onDragStart = (e: DragEvent, tab: DockTab) => {
+  if (e.dataTransfer) {
+    e.dataTransfer.effectAllowed = "move";
+    // Transfer tab and panel IDs
+    // 传输标签页 ID 和面板 ID
+    e.dataTransfer.setData(
+      "dock/tab",
+      JSON.stringify({
+        tabId: tab.id,
+        panelId: props.panelData.id,
+      }),
+    );
+  }
+};
 
-const onTabClick = (tab) => {
-  props.panelData.activeId = tab.id
-}
+const onTabClick = (tab: DockTab) => {
+  props.panelData.activeId = tab.id;
+};
 
-const onCloseClick = (e, tab) => {
-  e.stopPropagation()
+const onCloseClick = (e: Event, tab: DockTab) => {
+  e.stopPropagation();
   // Use dockMove to handle removal properly, triggering cleanup logic
   // 使用 dockMove 正确处理移除，触发清理逻辑
-  onDockMove(tab, null, 'remove')
-}
+  onDockMove(tab, null, "remove");
+};
 </script>
 
 <template>
   <div class="dock-bar">
-    <div 
-      v-for="tab in panelData.tabs" 
+    <div
+      v-for="tab in panelData.tabs"
       :key="tab.id"
       class="dock-tab"
       :class="{ 'dock-tab-active': panelData.activeId === tab.id }"
@@ -52,8 +55,18 @@ const onCloseClick = (e, tab) => {
       @click="onTabClick(tab)"
     >
       <div class="dock-tab-title">{{ tab.title }}</div>
-      <span v-if="tab.closable" class="dock-tab-close" @click="onCloseClick($event, tab)">
-        <svg viewBox="0 0 12 12" width="12" height="12"><path d="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5" stroke="currentColor" stroke-width="1.5" /></svg>
+      <span
+        v-if="tab.closable"
+        class="dock-tab-close"
+        @click="onCloseClick($event, tab)"
+      >
+        <svg viewBox="0 0 12 12" width="12" height="12">
+          <path
+            d="M2.5 2.5 L9.5 9.5 M9.5 2.5 L2.5 9.5"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+        </svg>
       </span>
     </div>
     <div class="dock-bar-fill"></div>

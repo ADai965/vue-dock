@@ -1,24 +1,24 @@
-<script setup>
+<script setup lang="ts">
 import { inject, ref } from 'vue'
 import { DockContext, DropDirection } from './DockData'
 import DockTabs from './DockTabs.vue'
 import DockTabRenderer from './DockTabRenderer.vue'
+import type { DockPanel, DropDirectionType } from './types'
 
-const props = defineProps({
-  panelData: {
-    type: Object,
-    required: true
-  }
-})
+const props = defineProps<{
+  panelData: DockPanel
+}>()
 
-const { onDockMove, getTabComponent } = inject(DockContext)
-const dropZone = ref(null)
+const { onDockMove } = inject(DockContext) as any
+const dropZone = ref<DropDirectionType | null>(null)
 
-const onDragOver = (e) => {
+const onDragOver = (e: DragEvent) => {
   e.preventDefault()
   e.stopPropagation()
   
-  const rect = e.currentTarget.getBoundingClientRect()
+  if (!e.currentTarget) return
+
+  const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
   const width = rect.width
   const height = rect.height
   const x = e.clientX - rect.left
@@ -33,13 +33,14 @@ const onDragOver = (e) => {
   else dropZone.value = DropDirection.MIDDLE
 }
 
-const onDrop = (e) => {
+const onDrop = (e: DragEvent) => {
   e.preventDefault()
   e.stopPropagation()
   
   const zone = dropZone.value
   dropZone.value = null
   
+  if (!e.dataTransfer) return
   const data = e.dataTransfer.getData('dock/tab')
   if (!data) return
   
@@ -48,7 +49,9 @@ const onDrop = (e) => {
   // If dropping on same panel and middle, ignore
   if (source.panelId === props.panelData.id && zone === DropDirection.MIDDLE) return
   
-  onDockMove({ id: source.tabId }, props.panelData.id, zone)
+  if (zone) {
+      onDockMove({ id: source.tabId }, props.panelData.id, zone)
+  }
 }
 
 const onDragLeave = () => {

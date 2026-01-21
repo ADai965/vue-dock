@@ -1,39 +1,38 @@
 import { nextId, DropDirection } from './DockData'
+import type { LayoutData, DockBox, DockPanel, DockTab, DropDirectionType } from './types'
 
 /**
  * Deep clone utility
  * 深度克隆工具函数
- * @param {any} obj 
- * @returns {any}
  */
-function clone(obj) {
+function clone<T>(obj: T): T {
   if (obj === null || typeof obj !== 'object') return obj
-  if (Array.isArray(obj)) return obj.map(clone)
+  if (Array.isArray(obj)) return obj.map(clone) as any as T
   
-  const copy = {}
+  const copy: any = {}
   for (const key in obj) {
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
       // Prevent deep cloning of Vue components or raw objects
       // 防止深度克隆 Vue 组件或原始对象
       if (key === 'component' || key === 'content' || key === 'icon') {
-          copy[key] = obj[key]
+          copy[key] = (obj as any)[key]
       } else {
-          copy[key] = clone(obj[key])
+          copy[key] = clone((obj as any)[key])
       }
     }
   }
-  return copy
+  return copy as T
 }
 
 /**
  * Find a node in the layout by ID
  * 根据 ID 在布局中查找节点
- * @param {Object} layout - The layout root object (布局根对象)
- * @param {string} id - The node ID to find (要查找的节点 ID)
- * @param {Function} [filter] - Optional filter function (可选的过滤函数)
- * @returns {Object|undefined} - The found node or undefined (找到的节点或 undefined)
+ * @param layout - The layout root object (布局根对象)
+ * @param id - The node ID to find (要查找的节点 ID)
+ * @param filter - Optional filter function (可选的过滤函数)
+ * @returns - The found node or undefined (找到的节点或 undefined)
  */
-export function find(layout, id, filter) {
+export function find(layout: LayoutData, id: string, filter?: (node: any) => boolean): DockBox | DockPanel | DockTab | undefined {
   const result = findInBox(layout.dockbox, id, filter)
   if (result) return result
   if (layout.floatbox) {
@@ -47,19 +46,20 @@ export function find(layout, id, filter) {
  * Recursive search helper
  * 递归查找辅助函数
  */
-function findInBox(box, id, filter) {
+function findInBox(box: DockBox | DockPanel, id: string, filter?: (node: any) => boolean): DockBox | DockPanel | DockTab | undefined {
   if (!box) return undefined
   if (box.id === id && (!filter || filter(box))) return box
   
-  if (box.children) {
+  if ('children' in box && box.children) {
     for (const child of box.children) {
       if (child.id === id && (!filter || filter(child))) return child
-      if (child.tabs) {
+      
+      if ('tabs' in child && child.tabs) {
         if (child.id === id && (!filter || filter(child))) return child
         const tab = child.tabs.find(t => t.id === id)
         if (tab && (!filter || filter(tab))) return tab
       } else {
-        const result = findInBox(child, id, filter)
+        const result = findInBox(child as DockBox, id, filter)
         if (result) return result
       }
     }
@@ -71,8 +71,8 @@ function findInBox(box, id, filter) {
  * Update a tab's properties
  * 更新标签页属性
  */
-export function updateTab(layout, id, newTab) {
-  const tab = find(layout, id)
+export function updateTab(layout: LayoutData, id: string, newTab: Partial<DockTab>): boolean {
+  const tab = find(layout, id) as DockTab
   if (!tab) return false
   Object.assign(tab, newTab)
   return true
@@ -82,29 +82,29 @@ export function updateTab(layout, id, newTab) {
  * Main function to handle drag and drop moves
  * 处理拖拽移动的主要函数
  * 
- * @param {Object} layout - Current layout state (当前布局状态)
- * @param {Object} source - Source tab/panel being moved (被移动的源标签页/面板)
- * @param {Object} target - Target node/id to drop onto (放置的目标节点/ID)
- * @param {string} direction - Drop direction (e.g., 'left', 'right', 'middle', 'remove') (放置方向)
- * @returns {Object} - New layout state (新的布局状态)
+ * @param layout - Current layout state (当前布局状态)
+ * @param source - Source tab/panel being moved (被移动的源标签页/面板)
+ * @param target - Target node/id to drop onto (放置的目标节点/ID)
+ * @param direction - Drop direction (e.g., 'left', 'right', 'middle', 'remove') (放置方向)
+ * @returns - New layout state (新的布局状态)
  */
-export function dockMove(layout, source, target, direction) {
+export function dockMove(layout: LayoutData, source: DockTab | DockPanel, target: DockTab | DockPanel | DockBox | string, direction: DropDirectionType): LayoutData {
   let currentLayout = clone(layout)
   
   // 1. Find and Remove Source
   // 1. 查找并移除源节点
-  let sourceTab
-  let sourcePanel
+  let sourceTab: DockTab | undefined
+  let sourcePanel: DockPanel | undefined
   
   // Helper to find parent panel of a tab
   // 查找标签页所属父面板的辅助函数
-  const findParentPanel = (box, tabId) => {
+  const findParentPanel = (box: DockBox, tabId: string): DockPanel | null => {
     if (!box || !box.children) return null
     for (const child of box.children) {
-       if (child.tabs) {
+       if ('tabs' in child && child.tabs) {
          if (child.tabs.find(t => t.id === tabId)) return child
        } else {
-         const found = findParentPanel(child, tabId)
+         const found = findParentPanel(child as DockBox, tabId)
          if (found) return found
        }
     }
@@ -114,9 +114,9 @@ export function dockMove(layout, source, target, direction) {
   // If source has id, try to find it in layout
   // 如果源有 ID，尝试在布局中查找它
   if (source.id) {
-     sourcePanel = findParentPanel(currentLayout.dockbox, source.id)
+     sourcePanel = findParentPanel(currentLayout.dockbox, source.id) || undefined
      if (!sourcePanel && currentLayout.floatbox) {
-         sourcePanel = findParentPanel(currentLayout.floatbox, source.id)
+         sourcePanel = findParentPanel(currentLayout.floatbox, source.id) || undefined
      }
   }
   
@@ -138,7 +138,7 @@ export function dockMove(layout, source, target, direction) {
       }
     }
   } else {
-      sourceTab = { ...source }
+      sourceTab = { ...(source as DockTab) }
   }
   
   // ALWAYS cleanup tree after any removal operation to ensure stability
@@ -159,7 +159,8 @@ export function dockMove(layout, source, target, direction) {
   
   if (direction === DropDirection.REMOVE) return currentLayout
   
-  let targetNode = find(currentLayout, target.id || target)
+  const targetId = typeof target === 'string' ? target : target.id
+  let targetNode = find(currentLayout, targetId)
   
   if (!targetNode && direction !== DropDirection.FLOAT) {
       // If no target and not float, maybe append to root?
@@ -176,40 +177,44 @@ export function dockMove(layout, source, target, direction) {
      return currentLayout
   }
   
-  if (direction === DropDirection.MIDDLE || direction === DropDirection.CENTER) {
+  // Type guards
+  const isDockPanel = (node: any): node is DockPanel => 'tabs' in node
+  const isDockBox = (node: any): node is DockBox => 'children' in node
+
+  if (targetNode && (direction === DropDirection.MIDDLE || direction === DropDirection.CENTER)) { // CENTER is not in DropDirectionType but checking just in case? DropDirectionType has MIDDLE
       // Drop into existing tabs
       // 放入现有的标签页中
-      if (targetNode.tabs) {
-          targetNode.tabs.push(sourceTab)
-          targetNode.activeId = sourceTab.id
-      } else if (targetNode.children) {
+      if (isDockPanel(targetNode)) {
+          targetNode.tabs.push(sourceTab!)
+          targetNode.activeId = sourceTab!.id
+      } else if (isDockBox(targetNode)) {
           // If dropping into a box (empty or not), create a panel inside it
           // 如果放入一个盒子（无论是否为空），在其中创建一个面板
-          const newPanel = {
+          const newPanel: DockPanel = {
             id: nextId(),
-            tabs: [sourceTab],
-            activeId: sourceTab.id,
+            tabs: [sourceTab!],
+            activeId: sourceTab!.id,
             // size undefined allows flex: 1 behavior for equal distribution
             // size undefined 允许 flex: 1 行为以实现均匀分布
             size: undefined
           }
           targetNode.children.push(newPanel)
       }
-  } else {
+  } else if (targetNode) {
       // Split layout
       // 分割布局
       const parentBox = findParentBox(currentLayout.dockbox, targetNode.id) || 
                         (currentLayout.floatbox ? findParentBox(currentLayout.floatbox, targetNode.id) : null)
       
       if (parentBox) {
-         const newPanel = {
+         const newPanel: DockPanel = {
              id: nextId(),
-             tabs: [sourceTab],
-             activeId: sourceTab.id,
+             tabs: [sourceTab!],
+             activeId: sourceTab!.id,
              // size undefined allows flex: 1 behavior for equal distribution
              // size undefined 允许 flex: 1 行为以实现均匀分布
              size: undefined, 
-             group: sourceTab.group // Propagate group (传递分组)
+             group: sourceTab!.group // Propagate group (传递分组)
          }
          
          const reqMode = (direction === DropDirection.LEFT || direction === DropDirection.RIGHT) ? 'horizontal' : 'vertical'
@@ -218,7 +223,7 @@ export function dockMove(layout, source, target, direction) {
          if (parentBox.mode === reqMode) {
              // Same direction, just insert
              // 方向相同，直接插入
-             const idx = parentBox.children.indexOf(targetNode)
+             const idx = parentBox.children.indexOf(targetNode as DockBox | DockPanel)
              parentBox.children.splice(isFirst ? idx : idx + 1, 0, newPanel)
              
              // Also reset targetNode size to undefined to ensure they share space equally
@@ -227,13 +232,13 @@ export function dockMove(layout, source, target, direction) {
          } else {
              // Different direction, wrap in new box
              // 方向不同，包裹在新盒子中
-             const newBox = {
+             const newBox: DockBox = {
                  id: nextId(),
                  mode: reqMode,
-                 children: isFirst ? [newPanel, targetNode] : [targetNode, newPanel],
+                 children: isFirst ? [newPanel, targetNode as DockBox | DockPanel] : [targetNode as DockBox | DockPanel, newPanel],
                  size: targetNode.size
              }
-             const idx = parentBox.children.indexOf(targetNode)
+             const idx = parentBox.children.indexOf(targetNode as DockBox | DockPanel)
              parentBox.children[idx] = newBox
              // Reset target size to flex 1 inside new box?
              // 在新盒子中重置目标大小为 flex 1？
@@ -242,10 +247,10 @@ export function dockMove(layout, source, target, direction) {
       } else if (targetNode === currentLayout.dockbox) {
           // Root split
           // 根节点分割
-          const newPanel = {
+          const newPanel: DockPanel = {
             id: nextId(),
-            tabs: [sourceTab],
-            activeId: sourceTab.id,
+            tabs: [sourceTab!],
+            activeId: sourceTab!.id,
             size: undefined
           }
            const reqMode = (direction === DropDirection.LEFT || direction === DropDirection.RIGHT) ? 'horizontal' : 'vertical'
@@ -254,7 +259,7 @@ export function dockMove(layout, source, target, direction) {
            if (currentLayout.dockbox.mode === reqMode) {
                 currentLayout.dockbox.children.splice(isFirst ? 0 : currentLayout.dockbox.children.length, 0, newPanel)
            } else {
-                const newChildBox = {
+                const newChildBox: DockBox = {
                     id: nextId(),
                     mode: currentLayout.dockbox.mode,
                     children: currentLayout.dockbox.children,
@@ -276,12 +281,14 @@ export function dockMove(layout, source, target, direction) {
  * Find parent box of a child ID
  * 查找子 ID 的父盒子
  */
-function findParentBox(box, childId) {
+function findParentBox(box: DockBox, childId: string): DockBox | null {
   if (!box || !box.children) return null
   for (const child of box.children) {
     if (child.id === childId) return box
-    const result = findParentBox(child, childId)
-    if (result) return result
+    if ('children' in child) {
+        const result = findParentBox(child as DockBox, childId)
+        if (result) return result
+    }
   }
   return null
 }
@@ -290,7 +297,7 @@ function findParentBox(box, childId) {
  * Remove a node from the tree
  * 从树中移除节点
  */
-function removeNode(box, childId) {
+function removeNode(box: DockBox, childId: string): boolean {
   if (!box || !box.children) return false
   const idx = box.children.findIndex(c => c.id === childId)
   if (idx > -1) {
@@ -299,9 +306,12 @@ function removeNode(box, childId) {
   }
   
   for (let i = 0; i < box.children.length; i++) {
-     if (removeNode(box.children[i], childId)) {
-        // We don't remove empty parent here, we let cleanupTree handle it
-        // 我们不在这里移除空父节点，让 cleanupTree 处理
+     const child = box.children[i]
+     if ('children' in child) {
+         if (removeNode(child as DockBox, childId)) {
+            // We don't remove empty parent here, we let cleanupTree handle it
+            // 我们不在这里移除空父节点，让 cleanupTree 处理
+         }
      }
   }
   return false
@@ -310,10 +320,10 @@ function removeNode(box, childId) {
 /**
  * Clean up the layout tree (remove empty boxes, flatten nested boxes)
  * 清理布局树（移除空盒子，扁平化嵌套盒子）
- * @param {Object} box - The box to clean (要清理的盒子)
- * @returns {boolean} - Whether any changes were made (是否发生了更改)
+ * @param box - The box to clean (要清理的盒子)
+ * @returns - Whether any changes were made (是否发生了更改)
  */
-function cleanupTree(box) {
+function cleanupTree(box: DockBox): boolean {
   if (!box || !box.children) return false // Return boolean indicating if changes were made
 
   let changed = false
@@ -330,10 +340,10 @@ function cleanupTree(box) {
   for (let i = 0; i < box.children.length; i++) {
     const child = box.children[i]
     
-    if (child.children) {
+    if ('children' in child && child.children) {
         // Recurse first
         // 先递归
-        if (cleanupTree(child)) {
+        if (cleanupTree(child as DockBox)) {
             changed = true
         }
         
@@ -349,7 +359,7 @@ function cleanupTree(box) {
         } else if (child.children.length === 1) {
             if (child.id === 'editor-box') {
                 const grandChild = child.children[0]
-                if (grandChild.children) { // grandChild is a Box
+                if ('children' in grandChild) { // grandChild is a Box
                      // Merge Box into editor-box
                      // 将盒子合并到 editor-box 中
                      child.mode = grandChild.mode
@@ -383,7 +393,7 @@ function cleanupTree(box) {
 
 // Wrapper to run until stable
 // 运行直到稳定的包装器
-function cleanupTreeRoot(box) {
+function cleanupTreeRoot(box: DockBox) {
     let maxLoops = 10
     while (cleanupTree(box) && maxLoops > 0) {
         maxLoops--

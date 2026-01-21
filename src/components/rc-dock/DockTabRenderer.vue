@@ -1,15 +1,13 @@
-<script setup>
-import { inject, provide, toRef } from 'vue'
+<script setup lang="ts">
+import { inject, provide } from 'vue'
 import { DockContext } from './DockData'
+import type { DockTab } from './types'
 
-const props = defineProps({
-  tab: {
-    type: Object,
-    required: true
-  }
-})
+const props = defineProps<{
+  tab: DockTab
+}>()
 
-const { getTabComponent } = inject(DockContext)
+const { getTabComponent } = inject(DockContext) as any
 
 // Provide the current Tab ID to the inner component
 // 向内部组件提供当前标签页 ID

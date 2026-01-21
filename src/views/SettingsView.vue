@@ -1,8 +1,13 @@
-<script setup>
+<script setup lang="ts">
 import { useTabState } from '../components/rc-dock/useTabState'
 
+interface SettingsState {
+  theme: string
+  notifications: boolean
+}
+
 // Automatically persistent state scoped to this tab
-const settings = useTabState({
+const settings = useTabState<SettingsState>({
   theme: 'Dark',
   notifications: true
 })

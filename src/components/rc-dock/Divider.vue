@@ -1,11 +1,13 @@
-<script setup>
-const props = defineProps({
-  mode: String
-})
+<script setup lang="ts">
+const props = defineProps<{
+  mode: string
+}>()
 
-const emit = defineEmits(['start-resize'])
+const emit = defineEmits<{
+  (e: 'start-resize', event: MouseEvent): void
+}>()
 
-const onMouseDown = (e) => {
+const onMouseDown = (e: MouseEvent) => {
   e.preventDefault()
   emit('start-resize', e)
 }
