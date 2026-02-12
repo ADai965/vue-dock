@@ -8,6 +8,8 @@ import { getTabState, saveTabState } from "./DockData";
  * @param initialState - Default state values (默认状态值)
  * @returns - Reactive state object that auto-saves (自动保存的响应式状态对象)
  */
+// Persisted state helper for tab content components
+// 标签内容组件的持久化状态助手
 export function useTabState<T extends Record<string, any>>(
   initialState: T = {} as T,
 ): T {
@@ -36,10 +38,14 @@ export function useTabState<T extends Record<string, any>>(
 
   // Watch for changes and trigger save
   // 监听变化并触发保存
+  let saveTimer: ReturnType<typeof setTimeout> | null = null;
   watch(
     state,
     () => {
-      saveTabState();
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        saveTabState();
+      }, 300);
     },
     { deep: true },
   );

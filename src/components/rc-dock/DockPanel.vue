@@ -10,8 +10,12 @@ const props = defineProps<{
 }>()
 
 const { onDockMove } = inject(DockContext)!
+// Current drop indicator zone
+// 当前拖拽落点提示区域
 const dropZone = ref<DropDirectionType | null>(null)
 
+// Update dropZone based on pointer position
+// 根据鼠标位置计算落点方向
 const onDragOver = (e: DragEvent) => {
   e.preventDefault()
   e.stopPropagation()
@@ -33,6 +37,8 @@ const onDragOver = (e: DragEvent) => {
   else dropZone.value = DropDirection.MIDDLE
 }
 
+// Handle drop and move tab
+// 处理放下事件并移动标签页
 const onDrop = (e: DragEvent) => {
   e.preventDefault()
   e.stopPropagation()

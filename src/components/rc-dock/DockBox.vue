@@ -11,12 +11,16 @@ const props = defineProps<{
   boxData: DockBoxType;
 }>();
 
+// Type guard to distinguish panel nodes
+// 用于区分面板节点的类型守卫
 const isPanel = (item: DockBoxType | DockPanelType): item is DockPanelType => {
   return "tabs" in item;
 };
 
 const boxRef = ref<HTMLElement | null>(null);
 
+// Start drag resize between two siblings
+// 开始拖拽调整相邻面板大小
 const onResizeStart = (index: number, e: MouseEvent) => {
   const box = boxRef.value;
   if (!box) return;

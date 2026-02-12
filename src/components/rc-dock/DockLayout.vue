@@ -25,17 +25,18 @@ const props = withDefaults(
   },
 );
 
+// Reactive layout state and version counter
+// 布局状态与版本号（用于触发渲染刷新）
 const layout = ref<LayoutData>(props.defaultLayout);
 const layoutVersion = ref(0);
 
 // Cache for persistent components
 // 持久化组件的缓存
 const tabCache = ref(new Map<string, Component>());
-const tabKeys = ref<string[]>([]);
 
 // Persistence
 // 持久化逻辑
-let saveTimer: any = null;
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
 const saveLayout = () => {
   if (saveTimer) clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
@@ -103,11 +104,15 @@ watch(
   { deep: true },
 );
 
+// Commit layout changes and bump version
+// 提交布局变更并递增版本号
 const updateLayout = (newLayout: LayoutData) => {
   layout.value = newLayout;
   layoutVersion.value++;
 };
 
+// Public move API used by panels/tabs
+// 面板与标签页调用的移动入口
 const onDockMove = (
   source: DockTab | DockPanel,
   target: DockTab | DockPanel | DockBoxType | string,
@@ -117,6 +122,8 @@ const onDockMove = (
   updateLayout(newLayout);
 };
 
+// Find node by id from current layout tree
+// 在当前布局树中按 id 查找节点
 const findNode = (id: string) => find(layout.value, id);
 
 // Gather all tabs for rendering and update cache
@@ -138,16 +145,20 @@ const getAllTabs = (node: DockBoxType | DockPanel): DockTab[] => {
 // 布局变化时自动更新缓存
 watchEffect(() => {
   const tabs = getAllTabs(layout.value.dockbox);
-  // Ensure all tabs are in cache
-  // 确保所有标签页都在缓存中
+  const activeIds = new Set<string>();
+
   for (const tab of tabs) {
+    activeIds.add(tab.id);
     if (!tabCache.value.has(tab.id) && tab.component) {
       tabCache.value.set(tab.id, tab.component);
     }
   }
-  // Force reactivity update for template
-  // 强制模板的响应式更新
-  tabKeys.value = Array.from(tabCache.value.keys());
+
+  for (const key of tabCache.value.keys()) {
+    if (!activeIds.has(key)) {
+      tabCache.value.delete(key);
+    }
+  }
 });
 
 provide(DockContext, {

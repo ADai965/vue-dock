@@ -1,6 +1,8 @@
 import type { InjectionKey } from 'vue'
 import type { DropDirectionType, TabState, DockContextType } from './types'
 
+// Injection keys for dock context and provider
+// Dock 上下文与提供者的注入键
 export const DockContext: InjectionKey<DockContextType> = Symbol('DockContext')
 export const DockProvider: InjectionKey<any> = Symbol('DockProvider')
 
@@ -26,6 +28,8 @@ export const DropDirection: Record<string, DropDirectionType> = {
   UPDATE: 'update' // Special internal (内部特殊状态)
 }
 
+// Layout node type helpers
+// 布局节点类型辅助
 export const LayoutType = {
   Box: 'box',
   Panel: 'panel'

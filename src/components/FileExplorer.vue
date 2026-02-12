@@ -6,14 +6,20 @@ import AboutView from '../views/AboutView.vue'
 import SettingsView from '../views/SettingsView.vue'
 import type { DockBox, DockPanel } from './rc-dock/types'
 
+// Dock context provides layout state and move handler
+// Dock 上下文提供布局状态和移动处理函数
 const { onDockMove, layout } = inject(DockContext)!
 
+// File list shown in the left tree
+// 左侧树展示的组件列表
 const files = [
   { name: 'HomeView.vue', component: markRaw(HomeView) },
   { name: 'AboutView.vue', component: markRaw(AboutView) },
   { name: 'SettingsView.vue', component: markRaw(SettingsView) }
 ]
 
+// Find the first panel under a box for inserting new tabs
+// 查找盒子下的第一个面板，用于插入新标签页
 const findFirstPanel = (box: DockBox | DockPanel): DockPanel | null => {
     if (!box) return null
     if ('tabs' in box) return box as DockPanel
@@ -26,9 +32,12 @@ const findFirstPanel = (box: DockBox | DockPanel): DockPanel | null => {
     return null
 }
 
+// Double click to open a tab in the editor area
+// 双击在编辑区打开一个标签页
 const onDoubleClick = (file: { name: string, component: any }) => {
   const tab = {
-     // Append random suffix to allow multiple instances of the same component
+     // Unique tab id per open instance
+     // 每次打开生成唯一 tab id
      id: file.name.toLowerCase().replace(/[^a-z0-9-]/g, '-') + '-' + Math.random().toString(36).substr(2, 9),
      title: file.name,
      componentName: file.name,
@@ -36,7 +45,8 @@ const onDoubleClick = (file: { name: string, component: any }) => {
      closable: true
   }
   
-  // Try to find the first panel in editor-box to append to
+  // Prefer first panel under editor-box
+  // 优先插入 editor-box 下的第一个面板
   let targetId = 'editor-box'
   
   if (layout && layout.value && layout.value.dockbox) {

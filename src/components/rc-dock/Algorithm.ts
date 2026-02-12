@@ -1,3 +1,5 @@
+// Layout tree operations and drag/drop algorithm
+// 布局树操作与拖拽算法实现
 import { nextId, DropDirection } from './DockData'
 import type { LayoutData, DockBox, DockPanel, DockTab, DropDirectionType } from './types'
 
@@ -88,6 +90,8 @@ export function updateTab(layout: LayoutData, id: string, newTab: Partial<DockTa
  * @param direction - Drop direction (e.g., 'left', 'right', 'middle', 'remove') (放置方向)
  * @returns - New layout state (新的布局状态)
  */
+// Move a tab or panel within the layout tree based on drop direction
+// 根据拖拽方向在布局树中移动标签页或面板
 export function dockMove(layout: LayoutData, source: DockTab | DockPanel, target: DockTab | DockPanel | DockBox | string, direction: DropDirectionType): LayoutData {
   let currentLayout = clone(layout)
   

@@ -31,10 +31,14 @@ const onDragStart = (e: DragEvent, tab: DockTab) => {
   }
 };
 
+// Activate the clicked tab
+// 点击激活当前标签
 const onTabClick = (tab: DockTab) => {
   props.panelData.activeId = tab.id;
 };
 
+// Close tab via dock move removal
+// 通过 dockMove 触发关闭逻辑
 const onCloseClick = (e: Event, tab: DockTab) => {
   e.stopPropagation();
   // Use dockMove to handle removal properly, triggering cleanup logic
