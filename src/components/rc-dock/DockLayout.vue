@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provide, ref, watchEffect, onMounted, watch } from "vue";
+import { provide, ref, shallowRef, watchEffect, onMounted, watch } from "vue";
 import type { Component } from "vue";
 import { DockContext } from "./DockData";
 import { dockMove, find } from "./Algorithm";
@@ -32,7 +32,7 @@ const layoutVersion = ref(0);
 
 // Cache for persistent components
 // 持久化组件的缓存
-const tabCache = ref(new Map<string, Component>());
+const tabCache = shallowRef(new Map<string, Component>());
 
 // Persistence
 // 持久化逻辑

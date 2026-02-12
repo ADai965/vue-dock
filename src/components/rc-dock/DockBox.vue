@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { shallowRef } from "vue";
 import DockPanel from "./DockPanel.vue";
 import Divider from "./Divider.vue";
 import type {
@@ -17,7 +17,7 @@ const isPanel = (item: DockBoxType | DockPanelType): item is DockPanelType => {
   return "tabs" in item;
 };
 
-const boxRef = ref<HTMLElement | null>(null);
+const boxRef = shallowRef<HTMLElement | null>(null);
 
 // Start drag resize between two siblings
 // 开始拖拽调整相邻面板大小
