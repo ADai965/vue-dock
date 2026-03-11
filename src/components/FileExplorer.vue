@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { markRaw, inject } from 'vue'
-import { DockContext } from './rc-dock/DockData'
+import { DockContext, nextComponentId } from './rc-dock/DockData'
 import HomeView from '../views/HomeView.vue'
 import AboutView from '../views/AboutView.vue'
 import SettingsView from '../views/SettingsView.vue'
@@ -38,7 +38,7 @@ const onDoubleClick = (file: { name: string, component: any }) => {
   const tab = {
      // Unique tab id per open instance
      // 每次打开生成唯一 tab id
-     id: file.name.toLowerCase().replace(/[^a-z0-9-]/g, '-') + '-' + Math.random().toString(36).substr(2, 9),
+     id: nextComponentId(file.name),
      title: file.name,
      componentName: file.name,
      component: file.component,
